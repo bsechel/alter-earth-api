@@ -8,19 +8,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import uvicorn
 
-# Initialize FastAPI app
+from app.core.config import settings
+
+# Initialize FastAPI app with settings
 app = FastAPI(
-    title="Alter Earth API",
+    title=settings.app_name,
     description="A sustainable community platform with AI-powered content curation",
-    version="0.1.0",
+    version=settings.app_version,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    debug=settings.debug
 )
 
 # Add CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js frontend
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,9 +33,9 @@ app.add_middleware(
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "Welcome to Alter Earth API",
+        "message": f"Welcome to {settings.app_name}",
         "description": "Sustainable community platform with AI-powered content curation",
-        "version": "0.1.0",
+        "version": settings.app_version,
         "docs": "/docs",
         "timestamp": datetime.utcnow().isoformat()
     }
