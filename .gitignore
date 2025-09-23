@@ -68,3 +68,6 @@ htmlcov/
 
 # Redis dump
 dump.rdb
+
+# Claude-generated files (keep private for now)
+README_CLD.md

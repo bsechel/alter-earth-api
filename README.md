@@ -30,3 +30,48 @@ Alter Earth is a Reddit-like community platform focused on ecological conservati
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.11+ (tested with Python 3.13)
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/bsechel/alter-earth-api.git
+   cd alter-earth-api
+   ```
+
+2. **Run the setup script**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+3. **Start the development server**
+   ```bash
+   source venv/bin/activate
+   uvicorn main:app --reload
+   ```
+
+### Manual Installation
+
+If you prefer manual setup:
+
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install fastapi uvicorn[standard]
+
+# Start the server
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
