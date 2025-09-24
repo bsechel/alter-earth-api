@@ -35,19 +35,25 @@ app.add_middleware(
 # Include API routers
 app.include_router(users.router, prefix="/api/v1")
 
-# Simple news router for testing
-from fastapi import APIRouter
-news_router = APIRouter()
+# Simple test endpoint for database connection
+@app.get("/test-db")
+async def test_database_connection():
+    try:
+        from app.core.database import get_async_session
+        from sqlalchemy import text
+        async for session in get_async_session():
+            # Simple query to test connection and schema
+            result = await session.execute(text("SELECT 1"))
+            count_result = await session.execute(text("SELECT COUNT(*) FROM alter_earth.news_articles"))
+            return {
+                "status": "Database connected", 
+                "test_result": result.scalar(),
+                "news_articles_count": count_result.scalar()
+            }
+    except Exception as e:
+        return {"status": "Database error", "error": str(e)}
 
-@news_router.get("/")
-async def get_news():
-    return {"message": "News endpoint working", "articles": []}
-
-@news_router.get("/test")
-async def test_news():
-    return {"status": "News API is working!"}
-
-app.include_router(news_router, prefix="/api/v1/news", tags=["news"])
+app.include_router(news.router, prefix="/api/v1/news", tags=["news"])
 
 # Startup event to initialize database
 @app.on_event("startup")

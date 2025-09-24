@@ -27,15 +27,19 @@ def create_async_database_engine():
     # Convert postgres:// to postgresql+asyncpg:// for async support
     database_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
     
+    # For asyncpg, we'll set the schema in the session instead of connection
+    
     async_engine = create_async_engine(
         database_url,
         echo=settings.debug,  # Log SQL queries in debug mode
         pool_size=5,  # Reduced pool size for better compatibility
         max_overflow=10,
         pool_pre_ping=True,  # Verify connections before use
+        pool_reset_on_return='commit',  # Reset connections on return to pool
         # Fix for Supabase pooler - completely disable prepared statements
         connect_args={
             "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
         }
     )
     
@@ -54,6 +58,9 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     
     async with async_session_maker() as session:
         try:
+            # Set search path to alter_earth schema
+            from sqlalchemy import text
+            await session.execute(text("SET search_path TO alter_earth"))
             yield session
         except Exception:
             await session.rollback()
