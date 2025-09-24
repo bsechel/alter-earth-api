@@ -1,0 +1,636 @@
+I'm going to show you how to deploy or
+0:02
+host your FastAPI Python application on
+0:04
+AWS so that your API is accessible from
+0:07
+the public internet.
+0:08
+We'll be deploying this API project which we created as
+0:12
+part of the previous video tutorial.
+0:14
+If you didn't have the chance to work on
+0:16
+that then don't worry because I've
+0:18
+prepared a GitHub link in the video
+0:19
+description which you can just clone
+0:21
+directly during this tutorial.
+0:24
+And of course if you have a different
+0:25
+GitHub link to your own FastAPI
+0:27
+application then you can use that too.
+Launch an EC2 instance
+0:30
+So to get started you first need to log
+0:32
+into your AWS console so sign up for an
+0:35
+account if you don't have one and log in
+0:37
+and you should see something like this.
+0:39
+Now there's a couple of different ways
+0:40
+we can host a FastAPI application
+0:43
+we can just host it using EC2 which is a
+0:46
+virtual server so that's just going to
+0:48
+be a computer that's running in the cloud
+0:51
+24/7 and then we'll pay by the hour but
+0:53
+we can turn it on and off whenever we want.
+0:55
+That's what we're going to be doing today
+0:56
+however we can also use AWS Lambda
+0:59
+which is a serverless way to host the function.
+1:01
+That's pretty interesting as
+1:03
+well but not something I'll cover today.
+1:05
+Since we're using EC2 just go ahead and
+1:07
+click on that service and that should
+1:09
+bring you to your EC2 dashboard which
+1:12
+looks something like this so we'll go up
+1:14
+to this orange button over here and
+1:16
+click launch instances and we get to
+1:18
+configure a new instance to launch.
+1:21
+And here an instance is pretty much a
+1:23
+virtual server so we'll get to put in a
+1:25
+name and I'll just put
+1:28
+"FastAPI Server"
+1:31
+and then we'll have to choose the
+1:33
+machine image which is sort of like what
+1:35
+OS we want to launch it with for this
+1:37
+one I'm going to use an Ubuntu image.
+1:40
+And I'm going to use the latest long term supported version.
+1:45
+And for the instance type
+1:47
+if you've just created a new account
+1:49
+then I recommend you use "t2.micro"
+1:52
+because it will be free otherwise you
+1:54
+can check the pricing here.
+1:56
+"On-demand Linux" is just over one cent USD per hour
+2:00
+and there's a couple of other cheaper
+2:01
+ones as well like this "nano" one here.
+2:03
+But for this one I'm just going to leave
+2:05
+it default at "t2.micro" which is good enough
+2:09
+next there'll be an option to create a
+2:11
+key pair login and this is going to be a
+2:13
+file that you can use to SSH into your
+2:17
+instance so that you can access the
+2:19
+terminal in there and do things on it so
+2:21
+we're going to want to do that and here
+2:22
+the name can be anything I'm going to
+2:24
+call it FastAPI key.
+2:30
+And once you've created the key you
+2:32
+should see it appear in your downloads folder.
+2:37
+For the network settings we're going to
+2:38
+want to allow SSH traffic from anywhere
+2:40
+because we want to be able to connect to
+2:42
+this instance or this host from our terminal.
+2:46
+And we will also want to allow HTTP
+2:48
+access from the internet we might allow
+2:50
+HTTPS as well even though
+2:53
+this FastAPI application we're doing
+2:54
+will only support HTTP at this point.
+2:58
+And that's pretty much it.
+3:00
+Just double check your settings to make sure
+3:02
+everything looks like this and once you
+3:05
+are happy with that then you can click "Launch Instance".
+3:11
+Once your instance has launched
+3:13
+you can go back to the EC2 dashboard and
+3:15
+see it running like this.
+3:18
+If it's not running yet then it might
+3:19
+still be pending so you just have to
+3:21
+wait a little while and if you click on
+3:23
+the instance ID you can see the summary
+3:25
+for this instance including
+3:27
+its public IP address
+3:29
+which is how we can access it publicly on the internet.
+3:32
+Also it's public IPv4 DNS which
+3:35
+is sort of like a domain name that we
+3:38
+can use to access it if we don't want to
+3:39
+use the IP address directly.
+3:42
+And if I open this address
+3:44
+you should see that it can't connect.
+3:46
+That's because even though the instance
+3:47
+is running there's literally nothing on
+3:50
+the instance right now it's just an
+3:51
+empty Ubuntu computer.
+3:54
+And the IP address doesn't work either.
+3:56
+Our goal is to put our FastAPI application
+4:00
+onto this instance so that when we
+4:02
+access these endpoints we can actually use the API
+Connect to your EC2 instance
+4:06
+so now the next step is to connect to our instance.
+4:09
+If you click on this connect button up here
+4:11
+then it will take you to a page
+4:14
+with a few different options.
+4:15
+Normally you can use EC2 instance connect
+4:17
+which, if you press that, it will bring up a window where you have
+4:21
+the console accessible right here.
+4:24
+But I don't think this works here because this
+4:25
+is an Ubuntu image that doesn't have the
+4:28
+EC2 instance connect support.
+4:30
+So we'll go back to this and then click
+4:32
+SSH client if you're using Mac or Linux
+4:35
+then these instructions should be fine.
+4:37
+Otherwise I suggest you looking in the
+4:39
+comments below for how to SSH from Windows.
+4:42
+So remember that SSH ".pem" file that we created earlier?
+4:46
+We're going to need to use that
+4:48
+find that private key file
+4:50
+and then change the permissions so that
+4:52
+it's not publicly viewable, and then
+4:54
+we'll connect to the instance using this command.
+4:56
+So let's go ahead and do that now.
+4:58
+I'm now here in a directory where
+5:01
+I've copied my ".pem" file and I'm going to
+5:03
+run "changemod 400" on this file.
+5:07
+Now I'm just going to copy this SSH
+5:10
+command over from the example here which
+5:12
+has already been pre-filled with our
+5:15
+".pem" file name and the EC2 instance address.
+5:20
+If I just run the command
+5:23
+it will ask me a question I'll answer "yes".
+5:26
+And now I'm connected to the instance so
+5:29
+this terminal now represents the Ubuntu OS
+5:32
+inside this machine here.
+Install pip and NGINX
+5:35
+So the first thing I'm going to want to do
+5:36
+in this machine is to update and
+5:39
+install my dependencies.
+5:41
+So I'm going to start with "sudo apt-get update".
+5:44
+And this will update all the
+5:45
+repositories so we have access to all
+5:48
+the latest software.
+5:50
+I'm going to make this terminal a bit bigger as well.
+5:53
+And then the next step is to "sudo apt install".
+5:56
+And then I'm going to pass a flag
+5:58
+so that it presses yes for all the questions
+6:02
+and then I'm going to want to install Python 3
+6:05
+pip and NGINX like that.
+6:10
+So just a bit of background on the things we installed
+6:11
+the Ubuntu image doesn't actually come with "pip" so we had
+6:15
+to install Python pip so that we can use
+6:17
+that to install our FastAPI module.
+Route API traffic with NGINX
+6:20
+And NGINX, in case you're not familiar,
+6:23
+is something we can use.
+6:24
+It's like a web server software that
+6:27
+allows us to connect our FastAPI
+6:29
+application to IP addresses over here so
+6:32
+that when people visit these public
+6:34
+addresses they actually
+6:36
+get routed to our FastAPI server and
+6:39
+port running on this instance.
+6:42
+For NGINX to be able to do that we are
+6:44
+going to have to create a configuration
+6:46
+file inside a predefined location so
+6:49
+that when we start the NGINX software it
+6:52
+knows how to route the traffic so we're
+6:54
+going to do that by creating a new file
+6:56
+inside this directory.
+7:05
+So this is the directory that already
+7:07
+exists with NGINX by default and we're
+7:10
+just going to go ahead and create a new
+7:11
+file called ".fastapi_nginx"
+7:13
+which it will use to configure the
+7:16
+server when we start it up.
+7:19
+Now we're going to have to fill out
+7:20
+our NGINX configuration file
+7:22
+that's going to look like this.
+7:28
+We're going to be listening on port 80
+7:31
+which is the default HTTP port so that's
+7:34
+where our traffic is going to come in.
+7:38
+We're also going to need a server name
+7:40
+which is just going to be this IP address here
+7:43
+the public IPv4 address so just go ahead
+7:45
+and copy that and then paste that in here.
+7:48
+And then to tell NGINX where to wrap the
+7:51
+traffic we're going to do location
+7:54
+which is the route
+7:55
+and here we're going to put in proxy pass
+7:59
+and then the address of our FastAPI endpoint
+8:01
+Which to the perspective of
+8:04
+this instance, is going to be on
+8:05
+localhost so HTTP/...
+8:10
+This is the static address for the local host
+8:14
+and by default it's port 8000 so it looks like that.
+8:18
+And we'll just close off our curly brackets
+8:20
+and save that file.
+8:23
+By the way you don't have to understand
+8:24
+everything that this file is doing.
+8:26
+This is just something you have to configure once.
+8:27
+But if you do want to learn more
+8:30
+about NGINX and how it works you can
+8:33
+go to the official documentation and
+8:35
+read more about it there.
+8:38
+So I'm just going to save this and quit.
+8:39
+And now I'm going to restart my NGINX server so that
+8:43
+that configuration takes effect.
+8:48
+So just type "sudo service nginx restart".
+8:52
+And you're not going to see any kind of
+8:53
+output or anything here because it's
+8:55
+going to be running in the background.
+8:56
+But if something was wrong in your
+8:58
+configuration then you might get an
+8:59
+error here so I suggest you just go back
+9:02
+or go to the GitHub and then double check
+9:03
+that the configuration is correct.
+Run the FastAPI server
+9:06
+Now that the NGINX configuration is
+9:08
+finished I'm going to clone my FastAPI
+9:10
+project into this host, so let's go back
+9:13
+to the project GitHub and go to "code" and
+9:17
+then "clone" and then there should be an HTTPS option.
+9:19
+So just copy that then go back to your terminal here
+9:25
+and then type "git clone" and paste that GitHub link.
+9:32
+"github.com/pixegami/fastapi-tutorial.git" or
+9:35
+whatever your repository that you want to use is.
+9:39
+Once you run that it should be cloning
+9:41
+it into a directory called "fastapi-tutorial"
+9:43
+which I can see is there.
+9:46
+So let's go into that directory
+9:48
+and check that all our files are there.
+9:50
+So you can see this "main.py" file is the
+9:53
+FastAPI file that I want to run and
+9:55
+it's this file here that we created as
+9:58
+part of that previous video tutorial.
+10:01
+Before we can run this we actually need
+10:02
+to install the requirements so if I go into my requirements file
+10:08
+there's just FastAPI and "uvicorn".
+10:11
+I don't know why the line is formatted like that
+10:13
+but to install that we have to type
+10:16
+"pip3 install" and then "-r requirements.txt".
+10:21
+So once the installation is finished successfully
+10:22
+we should be able to start our FastAPI server.
+10:26
+I'm just going to clear that and then type
+10:30
+"python3" using the module "uvicorn"
+10:33
+and we're going to run the "main.py" file.
+10:36
+And the application is just called "app"
+10:40
+so now this looks familiar to when we
+10:42
+were doing it on our local machine,
+10:44
+except that this app is actually running in this Amazon server.
+10:52
+So it's running on this "localhost"
+10:54
+Obviously if we click this we're not
+10:56
+going to see it because this is
+10:58
+our "localhost" is not running it and this
+10:59
+is the "localhost" for the machine.
+11:01
+But the NGINX configuration we set up
+11:04
+earlier is actually designed to route
+11:06
+the traffic from this server from these
+11:09
+public IP addresses to this FastAPI
+11:12
+application running locally in the machine.
+11:14
+And if you open this address here
+11:17
+it's actually going to be a problem
+11:19
+loading the page - "unable to connect".
+11:21
+And that's because by default it tries to
+11:24
+take us to the HTTPS route which is on port 443 by default.
+11:30
+But we only exposed our API to port 80.
+11:33
+So we can access that by actually just
+11:35
+using the regular HTTP protocol we just
+11:38
+have to delete the "S" here
+Testing the API
+11:40
+and if we refresh that again we're going to see
+11:42
+that our API can actually be called from this address.
+11:44
+This is just the "root" path API
+11:47
+that just returns this welcome message here
+11:50
+and we can actually use all of these as well
+11:52
+for example if I try "/list books"
+11:58
+I'll see it that returns an empty list.
+12:00
+That's because I haven't added any books
+12:02
+to this yet but if I go ahead to the
+12:04
+docs section which is just "/docs" on the root path,
+12:07
+I'll be able to see the
+12:10
+Swagger documentation of all the API and
+12:12
+then I can interact with it here.
+12:14
+For example I can click this to add the book
+12:16
+and I can try it out and maybe add a new book.
+12:25
+And then if I execute that through the web UI
+12:27
+you can see the response and the
+12:29
+CURL request to interact with this API.
+12:32
+So that operation was successful and
+12:34
+then if I go back to my API and list books again,
+12:39
+I will now be able to see that the new book I've added is there.
+12:43
+And this is a public IP address so you can use this
+12:46
+from any computer or even your phone,
+12:48
+you'll be able to access this FastAPI application now.
+12:52
+So that's pretty much it for how you can
+12:54
+deploy or host a FastAPI application
+12:59
+on Amazon EC2 instances.
+Terminate the EC2 instance
+13:01
+Before you wrap up though,
+13:04
+you should go back to your console
+13:05
+and actually terminate this instance.
+13:07
+Otherwise you might be charged for it running
+13:10
+even, if it's in the free tier,
+13:12
+you might forget about it.
+13:13
+And then eventually it might start billing you to
+13:15
+to your account so once you're done with the tutorial and
+13:18
+you won't need the instance anymore,
+13:20
+just go ahead and click this check box or
+13:22
+right click this instance and then hit "terminate instance".
+13:27
+This will shut it down and eventually
+13:29
+once you see the "instance state" become "terminated",
+13:31
+like this other one I have here,
+13:33
+then you can be certain
+13:35
+that the instance is no longer used and you would
+13:38
+no longer be charged for it.
+13:39
+TGhat's pretty much it,
+13:41
+I hope you were successful in deploying your FastAPI application.

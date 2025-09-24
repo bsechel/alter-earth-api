@@ -1,6 +1,7 @@
 """
-Alter Earth API - Sustainable Community Platform
-A FastAPI backend for ecological conservation and green technology discussions.
+Alter Earth API - Technology for Ecological Conservation
+A FastAPI backend platform dedicated to ecological conservation, sustainability, 
+and leveraging technology and AI for environmental good.
 """
 
 from fastapi import FastAPI
@@ -15,7 +16,7 @@ from app.api.endpoints import users
 # Initialize FastAPI app with settings
 app = FastAPI(
     title=settings.app_name,
-    description="A sustainable community platform with AI-powered content curation",
+    description="A community platform for ecological conservation, sustainability advocacy, and using AI for environmental good",
     version=settings.app_version,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -45,7 +46,8 @@ async def root():
     """Root endpoint with API information."""
     return {
         "message": f"Welcome to {settings.app_name}",
-        "description": "Sustainable community platform with AI-powered content curation",
+        "description": "A community platform dedicated to ecological conservation and sustainability",
+        "mission": "Building community around ecological conservation, sustainability advocacy, and using AI for environmental good",
         "version": settings.app_version,
         "docs": "/docs",
         "timestamp": datetime.utcnow().isoformat()
