@@ -35,7 +35,6 @@ def create_async_database_engine():
         pool_pre_ping=True,  # Verify connections before use
         # Fix for Supabase pooler - completely disable prepared statements
         connect_args={
-            "prepared_statement_cache_size": 0,
             "statement_cache_size": 0,
         }
     )

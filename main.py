@@ -9,6 +9,8 @@ from datetime import datetime
 import uvicorn
 
 from app.core.config import settings
+from app.core.database import create_async_database_engine
+from app.api.endpoints import users
 
 # Initialize FastAPI app with settings
 app = FastAPI(
@@ -28,6 +30,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(users.router, prefix="/api/v1")
+
+# Startup event to initialize database
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database connection on startup."""
+    create_async_database_engine()
 
 @app.get("/")
 async def root():
