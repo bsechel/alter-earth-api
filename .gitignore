@@ -71,3 +71,6 @@ dump.rdb
 
 # Claude-generated files (keep private for now)
 README_CLD.md
+
+# Data exports
+alter_earth_jira_export.csv

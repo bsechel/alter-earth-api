@@ -4,7 +4,7 @@ A sustainable community platform built with Python FastAPI, featuring AI-powered
 
 ## 🌱 Project Overview
 
-Alter Earth is a Reddit-like community platform focused on ecological conservation, green technology, and sustainable living. The platform leverages AI for intelligent content curation and demonstrates modern platform engineering practices.
+Alter Earth is a community platform focused on ecological conservation, green technology, and sustainable living. The platform leverages AI for content curation and promotes the mission of applying new technology to conservation and sustainability.
 
 ## 🛠 Tech Stack
 
