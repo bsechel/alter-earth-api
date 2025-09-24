@@ -11,7 +11,7 @@ import uvicorn
 
 from app.core.config import settings
 from app.core.database import create_async_database_engine
-from app.api.endpoints import users
+from app.api.endpoints import users, news
 
 # Initialize FastAPI app with settings
 app = FastAPI(
@@ -34,6 +34,20 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(users.router, prefix="/api/v1")
+
+# Simple news router for testing
+from fastapi import APIRouter
+news_router = APIRouter()
+
+@news_router.get("/")
+async def get_news():
+    return {"message": "News endpoint working", "articles": []}
+
+@news_router.get("/test")
+async def test_news():
+    return {"status": "News API is working!"}
+
+app.include_router(news_router, prefix="/api/v1/news", tags=["news"])
 
 # Startup event to initialize database
 @app.on_event("startup")

@@ -115,14 +115,25 @@ else
     exit 1
 fi
 
-print_status "Step 9: Configuring nginx..."
-sudo tee /etc/nginx/sites-available/$SERVICE_NAME > /dev/null << EOF
+print_status "Step 9: Configuring nginx for subdomain setup..."
+
+# API configuration (api.alter.earth)
+sudo tee /etc/nginx/sites-available/api-altearth > /dev/null << EOF
+# API Server Configuration (api.alter.earth)
 server {
     listen 80;
-    server_name _;
+    server_name api.alter.earth;
     
     client_max_body_size 50M;
     
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # API endpoints
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host \$host;
@@ -130,22 +141,63 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         
+        # CORS headers for API
+        add_header 'Access-Control-Allow-Origin' 'https://alter.earth' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+        
+        # Handle preflight requests
+        if (\$request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://alter.earth';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+        
         # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
     }
     
-    # Health check endpoint
+    # Health check endpoint (no CORS needed)
     location /health {
         access_log off;
         proxy_pass http://127.0.0.1:8000/health;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
 
-# Enable nginx site
-sudo ln -sf /etc/nginx/sites-available/$SERVICE_NAME /etc/nginx/sites-enabled/
+# Frontend placeholder configuration (alter.earth)
+sudo tee /etc/nginx/sites-available/frontend-altearth > /dev/null << EOF
+# Frontend Server Configuration (alter.earth)
+server {
+    listen 80;
+    server_name alter.earth www.alter.earth;
+    
+    # Temporary redirect to API docs until frontend is ready
+    location / {
+        return 302 https://api.alter.earth/docs;
+    }
+    
+    # You can replace this with your frontend app later:
+    # root /var/www/alter.earth;
+    # index index.html index.htm;
+    # try_files \$uri \$uri/ /index.html;
+}
+EOF
+
+# Enable both nginx sites
+sudo ln -sf /etc/nginx/sites-available/api-altearth /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/frontend-altearth /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
 # Test nginx configuration
@@ -191,27 +243,46 @@ echo ""
 echo "🎉 Deployment completed!"
 echo ""
 echo "📋 Next steps:"
-echo "   1. Update your .env file with actual credentials:"
+echo "   1. Set up DNS records:"
+echo "      - A record: alter.earth → $PUBLIC_IP"
+echo "      - A record: api.alter.earth → $PUBLIC_IP"
+echo "      - A record: www.alter.earth → $PUBLIC_IP"
+echo ""
+echo "   2. Update your .env file with actual credentials:"
 echo "      sudo nano $APP_DIR/.env"
 echo ""
-echo "   2. Restart the service after updating .env:"
+echo "   3. Restart the service after updating .env:"
 echo "      sudo systemctl restart $SERVICE_NAME"
 echo ""
-echo "   3. Test your API:"
-echo "      Local: http://127.0.0.1:8000"
+echo "   4. Set up SSL certificates (after DNS propagation):"
+echo "      sudo apt install certbot python3-certbot-nginx"
+echo "      sudo certbot --nginx -d alter.earth -d www.alter.earth -d api.alter.earth"
+echo ""
+echo "   5. Test your setup:"
+echo "      Local API: http://127.0.0.1:8000"
 if [ "$PUBLIC_IP" != "unknown" ]; then
-echo "      Public: http://$PUBLIC_IP"
+echo "      Public API: http://$PUBLIC_IP (temp, until DNS)"
+echo "      Final API: https://api.alter.earth"
+echo "      Frontend: https://alter.earth"
 fi
-echo "      Docs: http://$PUBLIC_IP/docs"
+echo "      API Docs: https://api.alter.earth/docs"
 echo ""
 echo "🔧 Useful commands:"
 echo "   Check service status: sudo systemctl status $SERVICE_NAME"
 echo "   View logs: sudo journalctl -u $SERVICE_NAME -f"
 echo "   Restart service: sudo systemctl restart $SERVICE_NAME"
 echo "   Reload nginx: sudo systemctl reload nginx"
+echo "   Check SSL status: sudo certbot certificates"
 echo ""
-echo "🔒 Security recommendations:"
-echo "   - Set up SSL certificate with Let's Encrypt"
-echo "   - Configure firewall (ufw)"
-echo "   - Update .env with secure values"
-echo "   - Set up monitoring and backups"
+echo "🌍 Domain Setup:"
+echo "   Frontend: https://alter.earth (redirects to API docs for now)"
+echo "   API: https://api.alter.earth"
+echo "   API Documentation: https://api.alter.earth/docs"
+echo "   Health Check: https://api.alter.earth/health"
+echo ""
+echo "🔒 Security features included:"
+echo "   ✅ Security headers configured"
+echo "   ✅ CORS properly configured for alter.earth"
+echo "   ✅ Service runs as non-root user"
+echo "   ✅ Ready for SSL certificate installation"
+echo "   ✅ Health monitoring endpoint"
