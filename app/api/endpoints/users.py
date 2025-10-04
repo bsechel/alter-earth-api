@@ -9,6 +9,7 @@ from typing import List
 from uuid import UUID
 
 from app.core.database import get_async_session
+from app.core.auth import get_current_user
 from app.models.user import User
 from app.models.schemas import UserCreate, UserUpdate, UserResponse, UserPublic, ErrorResponse
 import asyncpg
@@ -132,18 +133,18 @@ async def list_users(
 async def update_user(
     user_id: UUID,
     user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Update user information."""
-    # Check if user exists
-    result = await session.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
-    
-    if not user:
+    """Update user information. Users can only update their own profiles."""
+    # Check if user is trying to update their own profile
+    if current_user.id != user_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update your own profile"
         )
+    
+    user = current_user  # Use the authenticated user
     
     # Update only provided fields
     update_data = user_update.model_dump(exclude_unset=True)
@@ -169,23 +170,20 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_user(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ):
     """
-    Deactivate user account.
-    
-    This soft-deletes the user by setting is_active to False.
+    Deactivate user account. Users can only deactivate their own accounts.
     """
-    result = await session.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
-    
-    if not user:
+    # Check if user is trying to deactivate their own account
+    if current_user.id != user_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only deactivate your own account"
         )
     
-    user.is_active = False
+    current_user.is_active = False
     
     try:
         await session.commit()
