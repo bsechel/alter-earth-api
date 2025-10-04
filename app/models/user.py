@@ -27,8 +27,13 @@ class User(Base):
     
     # Basic profile information
     email = Column(String(255), unique=True, nullable=False, index=True)
-    display_name = Column(String(100), nullable=False)
+    nickname = Column(String(50), nullable=False, unique=True, index=True)
     bio = Column(Text, nullable=True)
+    
+    # Optional real name (user choice to share)
+    first_name = Column(String(50), nullable=True)
+    last_name = Column(String(50), nullable=True)
+    show_real_name = Column(Boolean, default=False, nullable=False)
     
     # User role and permissions
     role = Column(String(20), nullable=False, default="member")  # member, expert, moderator, admin
@@ -52,6 +57,20 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     last_active_at = Column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def display_name(self):
+        """Display name based on user preference."""
+        if self.show_real_name and self.first_name:
+            return f"{self.first_name} {self.last_name}".strip()
+        return self.nickname
+    
+    @property
+    def greeting_name(self):
+        """Name for personalized greetings."""
+        if self.show_real_name and self.first_name:
+            return self.first_name
+        return self.nickname
 
     def __repr__(self):
         return f"<User(id={self.id}, cognito_id={self.cognito_id}, email={self.email}, role={self.role})>"

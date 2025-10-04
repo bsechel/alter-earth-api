@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     cognito_region: Optional[str] = None
     cognito_user_pool_id: Optional[str] = None
     cognito_client_id: Optional[str] = None
+    cognito_domain: Optional[str] = None  # e.g., "your-app.auth.us-west-2.amazoncognito.com"
     
     # Claude API Settings
     claude_api_key: Optional[str] = None
@@ -38,7 +39,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # CORS Settings
-    allowed_origins: list = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    allowed_origins: list = [
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000",
+        "https://alter.earth",
+        "https://api.alter.earth"
+    ]
     
     # News API Settings
     news_api_sources: list = [
