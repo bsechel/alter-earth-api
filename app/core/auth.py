@@ -67,7 +67,8 @@ class CognitoAuth:
                 key,
                 algorithms=['RS256'],
                 audience=self.client_id,
-                issuer=f"https://cognito-idp.{self.region}.amazonaws.com/{self.user_pool_id}"
+                issuer=f"https://cognito-idp.{self.region}.amazonaws.com/{self.user_pool_id}",
+                options={"verify_at_hash": False}  # Skip at_hash verification for ID tokens
             )
             
             return payload
