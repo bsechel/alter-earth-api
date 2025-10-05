@@ -19,13 +19,17 @@ security = HTTPBearer()
 
 class CognitoAuth:
     """AWS Cognito JWT token validation service."""
-    
+
     def __init__(self):
         self.region = settings.cognito_region
         self.user_pool_id = settings.cognito_user_pool_id
         self.client_id = settings.cognito_client_id
+        self.domain = settings.cognito_domain
         self.jwks_url = f"https://cognito-idp.{self.region}.amazonaws.com/{self.user_pool_id}/.well-known/jwks.json"
         self._jwks = None
+
+        # Debug logging
+        print(f"CognitoAuth initialized with domain: {self.domain}")
     
     async def get_jwks(self):
         """Fetch JSON Web Key Set from Cognito."""
@@ -83,7 +87,7 @@ class CognitoAuth:
         """
         Exchange authorization code for access/ID tokens.
         """
-        token_url = f"https://{settings.cognito_domain}/oauth2/token"
+        token_url = f"https://{self.domain}/oauth2/token"
         
         data = {
             'grant_type': 'authorization_code',
