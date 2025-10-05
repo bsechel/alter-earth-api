@@ -5,6 +5,10 @@ Core configuration settings for Alter Earth API.
 from pydantic_settings import BaseSettings
 from typing import Optional
 import os
+from dotenv import load_dotenv
+
+# Explicitly load .env file before settings are created
+load_dotenv()
 
 
 class Settings(BaseSettings):
