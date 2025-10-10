@@ -73,4 +73,5 @@ dump.rdb
 README_CLD.md
 
 # Data exports
-alter_earth_jira_export.csv
+alter_earth_jira_export.csvdocs/
+internal-docs/

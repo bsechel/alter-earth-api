@@ -11,7 +11,7 @@ import uvicorn
 
 from app.core.config import settings
 from app.core.database import create_async_database_engine
-from app.api.endpoints import users, news
+from app.api.endpoints import users, news, auth
 
 # Initialize FastAPI app with settings
 app = FastAPI(
@@ -33,6 +33,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 
 # Simple test endpoint for database connection
