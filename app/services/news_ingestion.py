@@ -20,8 +20,11 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.database import get_async_session
 from app.models.news import NewsArticle, NewsSource
+from app.models.post import Post, AutomatedArticle, EntityType
+from app.models.user import User
+from app.services.scoring import calculate_hot_score
 from app.core.news_config import (
-    ENVIRONMENTAL_RSS_SOURCES, 
+    ENVIRONMENTAL_RSS_SOURCES,
     QUALITY_INDICATORS,
     PRIMARY_SEARCH_TERMS,
     CATEGORY_MAPPING
@@ -34,10 +37,11 @@ logger = logging.getLogger(__name__)
 
 class NewsIngestionService:
     """Service for ingesting environmental news from various sources."""
-    
+
     def __init__(self):
         self.session: Optional[aiohttp.ClientSession] = None
         self.db_session: Optional[AsyncSession] = None
+        self.bot_user_id: Optional[str] = None
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -53,7 +57,27 @@ class NewsIngestionService:
         """Async context manager exit."""
         if self.session:
             await self.session.close()
-    
+
+    async def get_bot_user_id(self, db_session: AsyncSession) -> str:
+        """Get or find the AlterEarthBot user ID."""
+        if self.bot_user_id:
+            return self.bot_user_id
+
+        # Find AlterEarthBot user
+        result = await db_session.execute(
+            select(User).where(User.nickname == "AlterEarthBot")
+        )
+        bot_user = result.scalar_one_or_none()
+
+        if not bot_user:
+            raise ValueError(
+                "AlterEarthBot user not found. Please run the seed script: "
+                "python db/seeds/create_alterearth_bot.py"
+            )
+
+        self.bot_user_id = bot_user.id
+        return self.bot_user_id
+
     async def fetch_rss_feed(self, url: str) -> Optional[feedparser.FeedParserDict]:
         """Fetch and parse RSS feed from URL."""
         try:
@@ -216,37 +240,50 @@ class NewsIngestionService:
         
         return 'environmental-news'  # Default category
     
-    async def save_article(self, article_data: Dict, source: NewsSource, db_session: AsyncSession) -> Optional[NewsArticle]:
-        """Save article to database."""
+    async def save_article(self, article_data: Dict, source: NewsSource, db_session: AsyncSession) -> Optional[Post]:
+        """Save article as a post with automated_article detail."""
         try:
-            # Check if article already exists
+            # Get bot user ID
+            bot_user_id = await self.get_bot_user_id(db_session)
+
+            # Check if article already exists in automated_articles
             existing = await db_session.execute(
-                select(NewsArticle).where(NewsArticle.url == article_data['url'])
+                select(AutomatedArticle).where(AutomatedArticle.url == article_data['url'])
             )
             if existing.scalars().first():
                 logger.debug(f"Article already exists: {article_data['url']}")
                 return None
-            
+
             # Detect paywall and calculate scores
             access_type, paywall_at, is_full, access_notes = self.detect_paywall(
                 article_data['content'], article_data['url']
             )
-            
+
             relevance_score = self.calculate_relevance_score(
-                article_data['title'], 
-                article_data['description'], 
+                article_data['title'],
+                article_data['description'],
                 article_data['content']
             )
-            
+
             category = self.categorize_article(
                 article_data['title'],
-                article_data['description'], 
+                article_data['description'],
                 article_data['content']
             )
-            
-            # Create new article
-            article = NewsArticle(
+
+            # Create post
+            post = Post(
                 title=article_data['title'][:500],  # Truncate to fit column
+                entity_type=EntityType.automated_article,
+                user_id=bot_user_id,
+                hot_score=calculate_hot_score(0, 0, article_data['published_at'])
+            )
+            db_session.add(post)
+            await db_session.flush()  # Get post.id
+
+            # Create automated article detail
+            automated_article = AutomatedArticle(
+                post_id=post.id,
                 description=article_data['description'],
                 content=article_data['content'],
                 url=article_data['url'],
@@ -263,14 +300,14 @@ class NewsIngestionService:
                 word_count=article_data['word_count'],
                 reading_time_minutes=article_data['reading_time_minutes']
             )
-            
-            db_session.add(article)
+            db_session.add(automated_article)
+
             await db_session.commit()
-            await db_session.refresh(article)
-            
-            logger.info(f"Saved article: {article.title[:50]}... (relevance: {relevance_score:.2f})")
-            return article
-            
+            await db_session.refresh(post)
+
+            logger.info(f"Saved post: {post.title[:50]}... (relevance: {relevance_score:.2f})")
+            return post
+
         except IntegrityError:
             await db_session.rollback()
             logger.debug(f"Duplicate article skipped: {article_data['url']}")
@@ -327,8 +364,8 @@ class NewsIngestionService:
                 )
                 
                 if relevance >= 0.1:  # Minimum relevance threshold - more inclusive
-                    saved_article = await self.save_article(article_data, source, db_session)
-                    if saved_article:
+                    saved_post = await self.save_article(article_data, source, db_session)
+                    if saved_post:
                         articles_saved += 1
                 
             except Exception as e:
@@ -340,8 +377,8 @@ class NewsIngestionService:
         source.last_fetch_success = True
         source.total_articles_fetched += articles_saved
         await db_session.commit()
-        
-        logger.info(f"Processed {source_config['name']}: {articles_saved} articles saved")
+
+        logger.info(f"Processed {source_config['name']}: {articles_saved} posts created")
         return articles_saved
     
     async def ingest_all_sources(self) -> int:
@@ -358,8 +395,8 @@ class NewsIngestionService:
                     continue
             
             break  # Only need one session iteration
-        
-        logger.info(f"News ingestion complete. Total articles saved: {total_articles}")
+
+        logger.info(f"News ingestion complete. Total posts created: {total_articles}")
         return total_articles
 
 

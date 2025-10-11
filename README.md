@@ -75,3 +75,13 @@ uvicorn main:app --reload
 
 The API will be available at `http://localhost:8000`
 
+## 📚 Documentation
+
+- **API Documentation**: `http://localhost:8000/docs` (Swagger UI)
+- **OpenAPI Spec**: `docs/api/openapi-v1-phase2.json`
+- **Frontend Integration**: See `docs/FRONTEND_INTEGRATION.md`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
