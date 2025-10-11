@@ -3,10 +3,11 @@ Vote model for the voting system.
 Tracks user votes on posts and comments.
 """
 
-from sqlalchemy import Column, DateTime, SmallInteger, ForeignKey, CheckConstraint, PrimaryKeyConstraint
+from sqlalchemy import Column, DateTime, SmallInteger, ForeignKey, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+import uuid
 
 from app.core.database import Base
 
@@ -28,17 +29,22 @@ class Vote(Base):
             "vote_value IN (1, -1)",
             name='check_vote_value'
         ),
-        # Composite primary key
-        PrimaryKeyConstraint('user_id', 'post_id', 'comment_id'),
+        # Unique constraint for user votes on posts
+        UniqueConstraint('user_id', 'post_id', name='unique_user_post_vote'),
+        # Unique constraint for user votes on comments
+        UniqueConstraint('user_id', 'comment_id', name='unique_user_comment_vote'),
         {"schema": "alter_earth"}
     )
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # User who cast the vote
     user_id = Column(UUID(as_uuid=True), ForeignKey('alter_earth.users.id', ondelete='CASCADE'), nullable=False, index=True)
 
     # Either post_id or comment_id must be set (not both)
-    post_id = Column(UUID(as_uuid=True), ForeignKey('alter_earth.posts.id', ondelete='CASCADE'), nullable=True)
-    comment_id = Column(UUID(as_uuid=True), ForeignKey('alter_earth.comments.id', ondelete='CASCADE'), nullable=True)
+    post_id = Column(UUID(as_uuid=True), ForeignKey('alter_earth.posts.id', ondelete='CASCADE'), nullable=True, index=True)
+    comment_id = Column(UUID(as_uuid=True), ForeignKey('alter_earth.comments.id', ondelete='CASCADE'), nullable=True, index=True)
 
     # Vote value: 1 for upvote, -1 for downvote
     vote_value = Column(SmallInteger, nullable=False)
