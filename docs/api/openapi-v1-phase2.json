@@ -1,0 +1,3534 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Alter Earth API",
+        "description": "A community platform for ecological conservation, sustainability advocacy, and using AI for environmental good",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/v1/auth/exchange": {
+            "post": {
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Exchange Authorization Code",
+                "description": "Exchange authorization code for JWT tokens and create/sync user profile.\n\nThis endpoint is called by the frontend after successful Cognito authentication.\nIt handles both new user registration and existing user login.",
+                "operationId": "exchange_authorization_code_api_v1_auth_exchange_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenExchangeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Get Current User Profile",
+                "description": "Get current authenticated user's profile.\nStandard endpoint following Reddit/GitHub pattern.",
+                "operationId": "get_current_user_profile_api_v1_auth_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/": {
+            "post": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Create User",
+                "description": "Create a new user profile.\n\nThis endpoint creates a user profile linked to a Cognito user ID.\nAuthentication should be handled by Cognito before calling this endpoint.",
+                "operationId": "create_user_api_v1_users__post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "List Users",
+                "description": "List users with pagination.\n\nReturns public user information only.",
+                "operationId": "list_users_api_v1_users__get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserPublic"
+                                    },
+                                    "title": "Response List Users Api V1 Users  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{user_id}": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get User",
+                "description": "Get user by ID.",
+                "operationId": "get_user_api_v1_users__user_id__get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update User",
+                "description": "Update user information. Users can only update their own profiles.",
+                "operationId": "update_user_api_v1_users__user_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Deactivate User",
+                "description": "Deactivate user account. Users can only deactivate their own accounts.",
+                "operationId": "deactivate_user_api_v1_users__user_id__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/cognito/{cognito_id}": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get User By Cognito Id",
+                "description": "Get user by Cognito ID.",
+                "operationId": "get_user_by_cognito_id_api_v1_users_cognito__cognito_id__get",
+                "parameters": [
+                    {
+                        "name": "cognito_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Cognito Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/experts/": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "List Experts",
+                "description": "List expert users.",
+                "operationId": "list_experts_api_v1_users_experts__get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserPublic"
+                                    },
+                                    "title": "Response List Experts Api V1 Users Experts  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/posts": {
+            "get": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "List Posts",
+                "description": "List posts with sorting and pagination.\n\nSupports multiple sort options:\n- hot: Reddit-style hot ranking (default)\n- top: Highest score in time period\n- new: Most recent first\n- controversial: Most debated\n- rising: Trending among new posts",
+                "operationId": "list_posts_api_v1_posts_get",
+                "parameters": [
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SortOption",
+                            "default": "hot"
+                        }
+                    },
+                    {
+                        "name": "time_period",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/TimePeriod",
+                            "default": "day"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 25,
+                            "title": "Page Size"
+                        }
+                    },
+                    {
+                        "name": "community_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Community Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Create User Submission",
+                "description": "Create a new user submission (text or link post).\n\nRequires authentication.",
+                "operationId": "create_user_submission_api_v1_posts_post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserSubmissionCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/posts/{post_id}": {
+            "get": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Get Post",
+                "description": "Get a single post by ID with full details.",
+                "operationId": "get_post_api_v1_posts__post_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comments": {
+            "post": {
+                "tags": [
+                    "comments"
+                ],
+                "summary": "Create Comment",
+                "description": "Create a new comment on a post or reply to an existing comment.\n\n- If parent_id is null, creates a top-level comment\n- If parent_id is set, creates a reply to that comment",
+                "operationId": "create_comment_api_v1_comments_post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comments/post/{post_id}": {
+            "get": {
+                "tags": [
+                    "comments"
+                ],
+                "summary": "Get Post Comments",
+                "description": "Get all comments for a post as a threaded tree structure.\n\nReturns top-level comments with nested replies.",
+                "operationId": "get_post_comments_api_v1_comments_post__post_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentTreeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comments/{comment_id}": {
+            "get": {
+                "tags": [
+                    "comments"
+                ],
+                "summary": "Get Comment",
+                "description": "Get a single comment by ID.",
+                "operationId": "get_comment_api_v1_comments__comment_id__get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Comment Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "comments"
+                ],
+                "summary": "Update Comment",
+                "description": "Update a comment's content.\n\nOnly the comment author can update it.",
+                "operationId": "update_comment_api_v1_comments__comment_id__put",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Comment Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "comments"
+                ],
+                "summary": "Delete Comment",
+                "description": "Soft delete a comment.\n\nOnly the comment author can delete it.\nPreserves thread structure by marking as deleted instead of removing.",
+                "operationId": "delete_comment_api_v1_comments__comment_id__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Comment Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/votes/posts/{post_id}": {
+            "post": {
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Vote On Post",
+                "description": "Vote on a post.\n\n- vote_value: 1 for upvote, -1 for downvote\n- If user already voted, updates the vote\n- Cannot vote on own posts\n- Vote weight is based on user's karma",
+                "operationId": "vote_on_post_api_v1_votes_posts__post_id__post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VoteCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VoteResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Remove Vote From Post",
+                "description": "Remove vote from a post.\n\nReturns 204 even if vote didn't exist.",
+                "operationId": "remove_vote_from_post_api_v1_votes_posts__post_id__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/votes/posts/{post_id}/status": {
+            "get": {
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Get Post Vote Status",
+                "description": "Check if current user has voted on a post and what their vote is.",
+                "operationId": "get_post_vote_status_api_v1_votes_posts__post_id__status_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Post Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VoteStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/votes/comments/{comment_id}": {
+            "post": {
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Vote On Comment",
+                "description": "Vote on a comment.\n\n- vote_value: 1 for upvote, -1 for downvote\n- If user already voted, updates the vote\n- Cannot vote on own comments\n- Vote weight is based on user's karma",
+                "operationId": "vote_on_comment_api_v1_votes_comments__comment_id__post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Comment Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VoteCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VoteResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/votes/comments/{comment_id}/status": {
+            "get": {
+                "tags": [
+                    "votes"
+                ],
+                "summary": "Get Comment Vote Status",
+                "description": "Check if current user has voted on a comment and what their vote is.",
+                "operationId": "get_comment_vote_status_api_v1_votes_comments__comment_id__status_get",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Comment Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VoteStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/test-db": {
+            "get": {
+                "summary": "Test Database Connection",
+                "operationId": "test_database_connection_test_db_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/articles": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get News Articles",
+                "description": "Get environmental news articles with conservation-focused filtering.",
+                "operationId": "get_news_articles_api_v1_news_articles_get",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by category (climate-change, wildlife-conservation, etc.)",
+                            "title": "Category"
+                        },
+                        "description": "Filter by category (climate-change, wildlife-conservation, etc.)"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by news source name",
+                            "title": "Source"
+                        },
+                        "description": "Filter by news source name"
+                    },
+                    {
+                        "name": "access_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by access type (free, paywall, registration)",
+                            "default": "free",
+                            "title": "Access Type"
+                        },
+                        "description": "Filter by access type (free, paywall, registration)"
+                    },
+                    {
+                        "name": "min_relevance",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number",
+                                    "maximum": 1.0,
+                                    "minimum": 0.0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Minimum relevance score (0.0-1.0)",
+                            "default": 0.1,
+                            "title": "Min Relevance"
+                        },
+                        "description": "Minimum relevance score (0.0-1.0)"
+                    },
+                    {
+                        "name": "days_back",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 365,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Number of days back to search",
+                            "default": 7,
+                            "title": "Days Back"
+                        },
+                        "description": "Number of days back to search"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "description": "Number of articles to return",
+                            "default": 20,
+                            "title": "Limit"
+                        },
+                        "description": "Number of articles to return"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Number of articles to skip",
+                            "default": 0,
+                            "title": "Offset"
+                        },
+                        "description": "Number of articles to skip"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Search in title and description",
+                            "title": "Search"
+                        },
+                        "description": "Search in title and description"
+                    },
+                    {
+                        "name": "featured_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Show only featured articles",
+                            "default": false,
+                            "title": "Featured Only"
+                        },
+                        "description": "Show only featured articles"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NewsArticleListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/articles/{article_id}": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get Article",
+                "description": "Get a specific news article by ID.",
+                "operationId": "get_article_api_v1_news_articles__article_id__get",
+                "parameters": [
+                    {
+                        "name": "article_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Article Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NewsArticleResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/categories": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get Categories",
+                "description": "Get available news categories with article counts.",
+                "operationId": "get_categories_api_v1_news_categories_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/sources": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get News Sources",
+                "description": "Get available news sources.",
+                "operationId": "get_news_sources_api_v1_news_sources_get",
+                "parameters": [
+                    {
+                        "name": "active_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Show only active sources",
+                            "default": true,
+                            "title": "Active Only"
+                        },
+                        "description": "Show only active sources"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/NewsSourceResponse"
+                                    },
+                                    "title": "Response Get News Sources Api V1 News Sources Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/featured": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get Featured Articles",
+                "description": "Get featured environmental news articles.",
+                "operationId": "get_featured_articles_api_v1_news_featured_get",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "description": "Number of featured articles to return",
+                            "default": 10,
+                            "title": "Limit"
+                        },
+                        "description": "Number of featured articles to return"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NewsArticleListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/conservation-highlights": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get Conservation Highlights",
+                "description": "Get top conservation and wildlife protection stories.",
+                "operationId": "get_conservation_highlights_api_v1_news_conservation_highlights_get",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 20,
+                            "minimum": 1,
+                            "default": 5,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/climate-focus": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get Climate Focus Articles",
+                "description": "Get top climate change and environmental policy stories.",
+                "operationId": "get_climate_focus_articles_api_v1_news_climate_focus_get",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 20,
+                            "minimum": 1,
+                            "default": 5,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/news/stats": {
+            "get": {
+                "tags": [
+                    "news"
+                ],
+                "summary": "Get News Stats",
+                "description": "Get news collection statistics.",
+                "operationId": "get_news_stats_api_v1_news_stats_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Root",
+                "description": "Root endpoint with API information.",
+                "operationId": "root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Health check endpoint for monitoring.",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/info": {
+            "get": {
+                "summary": "Api Info",
+                "description": "API information endpoint.",
+                "operationId": "api_info_api_v1_info_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AutomatedArticleResponse": {
+                "properties": {
+                    "post_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Post Id"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "Url"
+                    },
+                    "source_name": {
+                        "type": "string",
+                        "title": "Source Name"
+                    },
+                    "source_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Url"
+                    },
+                    "author": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Author"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "tags": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tags"
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Published At"
+                    },
+                    "scraped_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Scraped At"
+                    },
+                    "relevance_score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Relevance Score"
+                    },
+                    "quality_score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Quality Score"
+                    },
+                    "ai_summary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ai Summary"
+                    },
+                    "access_type": {
+                        "type": "string",
+                        "title": "Access Type"
+                    },
+                    "word_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Word Count"
+                    },
+                    "reading_time_minutes": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reading Time Minutes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "post_id",
+                    "description",
+                    "content",
+                    "url",
+                    "source_name",
+                    "source_url",
+                    "author",
+                    "category",
+                    "tags",
+                    "published_at",
+                    "scraped_at",
+                    "relevance_score",
+                    "quality_score",
+                    "ai_summary",
+                    "access_type",
+                    "word_count",
+                    "reading_time_minutes"
+                ],
+                "title": "AutomatedArticleResponse",
+                "description": "Schema for automated article in responses."
+            },
+            "CommentAuthor": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "nickname": {
+                        "type": "string",
+                        "title": "Nickname"
+                    },
+                    "user_type": {
+                        "type": "string",
+                        "title": "User Type"
+                    },
+                    "is_expert": {
+                        "type": "boolean",
+                        "title": "Is Expert",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "nickname",
+                    "user_type"
+                ],
+                "title": "CommentAuthor",
+                "description": "Simplified user info for comment author."
+            },
+            "CommentCreate": {
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 10000,
+                        "minLength": 1,
+                        "title": "Content"
+                    },
+                    "parent_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Id",
+                        "description": "Parent comment ID for replies (null for top-level)"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content"
+                ],
+                "title": "CommentCreate",
+                "description": "Schema for creating a comment.",
+                "examples": [
+                    {
+                        "content": "This is a great article! Thanks for sharing."
+                    },
+                    {
+                        "content": "I agree with your point about ocean conservation.",
+                        "parent_id": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                ]
+            },
+            "CommentResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "post_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Post Id"
+                    },
+                    "parent_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Id"
+                    },
+                    "upvotes": {
+                        "type": "integer",
+                        "title": "Upvotes"
+                    },
+                    "downvotes": {
+                        "type": "integer",
+                        "title": "Downvotes"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "title": "Score"
+                    },
+                    "is_deleted": {
+                        "type": "boolean",
+                        "title": "Is Deleted"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "author": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CommentAuthor"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_vote": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Vote"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "content",
+                    "user_id",
+                    "post_id",
+                    "parent_id",
+                    "upvotes",
+                    "downvotes",
+                    "score",
+                    "is_deleted",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CommentResponse",
+                "description": "Schema for comment in responses (includes author info)."
+            },
+            "CommentTreeResponse": {
+                "properties": {
+                    "post_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Post Id"
+                    },
+                    "total_comments": {
+                        "type": "integer",
+                        "title": "Total Comments"
+                    },
+                    "top_level_count": {
+                        "type": "integer",
+                        "title": "Top Level Count"
+                    },
+                    "comments": {
+                        "items": {
+                            "$ref": "#/components/schemas/CommentWithReplies"
+                        },
+                        "type": "array",
+                        "title": "Comments"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "post_id",
+                    "total_comments",
+                    "top_level_count",
+                    "comments"
+                ],
+                "title": "CommentTreeResponse",
+                "description": "Schema for complete comment tree on a post.",
+                "example": {
+                    "comments": [],
+                    "post_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "top_level_count": 5,
+                    "total_comments": 15
+                }
+            },
+            "CommentUpdate": {
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 10000,
+                        "minLength": 1,
+                        "title": "Content"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "content"
+                ],
+                "title": "CommentUpdate",
+                "description": "Schema for updating a comment.",
+                "example": {
+                    "content": "Updated comment content..."
+                }
+            },
+            "CommentWithReplies": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "post_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Post Id"
+                    },
+                    "parent_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Id"
+                    },
+                    "upvotes": {
+                        "type": "integer",
+                        "title": "Upvotes"
+                    },
+                    "downvotes": {
+                        "type": "integer",
+                        "title": "Downvotes"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "title": "Score"
+                    },
+                    "is_deleted": {
+                        "type": "boolean",
+                        "title": "Is Deleted"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "author": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CommentAuthor"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_vote": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Vote"
+                    },
+                    "replies": {
+                        "items": {
+                            "$ref": "#/components/schemas/CommentWithReplies"
+                        },
+                        "type": "array",
+                        "title": "Replies",
+                        "default": []
+                    },
+                    "reply_count": {
+                        "type": "integer",
+                        "title": "Reply Count",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "content",
+                    "user_id",
+                    "post_id",
+                    "parent_id",
+                    "upvotes",
+                    "downvotes",
+                    "score",
+                    "is_deleted",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CommentWithReplies",
+                "description": "Schema for comment with nested replies (for building comment tree)."
+            },
+            "EntityTypeEnum": {
+                "type": "string",
+                "enum": [
+                    "automated_article",
+                    "user_submission"
+                ],
+                "title": "EntityTypeEnum",
+                "description": "Post entity type for API responses."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "NewsArticleListResponse": {
+                "properties": {
+                    "articles": {
+                        "items": {
+                            "$ref": "#/components/schemas/NewsArticleResponse"
+                        },
+                        "type": "array",
+                        "title": "Articles"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "title": "Limit"
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "title": "Offset"
+                    },
+                    "has_more": {
+                        "type": "boolean",
+                        "title": "Has More"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "articles",
+                    "total",
+                    "limit",
+                    "offset",
+                    "has_more"
+                ],
+                "title": "NewsArticleListResponse",
+                "description": "Response schema for a list of news articles with pagination."
+            },
+            "NewsArticleResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "Url"
+                    },
+                    "source_name": {
+                        "type": "string",
+                        "title": "Source Name"
+                    },
+                    "source_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Url"
+                    },
+                    "author": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Author"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Published At"
+                    },
+                    "scraped_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Scraped At"
+                    },
+                    "access_type": {
+                        "type": "string",
+                        "title": "Access Type",
+                        "default": "free"
+                    },
+                    "is_full_content": {
+                        "type": "boolean",
+                        "title": "Is Full Content",
+                        "default": true
+                    },
+                    "access_notes": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Access Notes"
+                    },
+                    "relevance_score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Relevance Score"
+                    },
+                    "word_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Word Count"
+                    },
+                    "reading_time_minutes": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reading Time Minutes"
+                    },
+                    "view_count": {
+                        "type": "integer",
+                        "title": "View Count",
+                        "default": 0
+                    },
+                    "share_count": {
+                        "type": "integer",
+                        "title": "Share Count",
+                        "default": 0
+                    },
+                    "is_featured": {
+                        "type": "boolean",
+                        "title": "Is Featured",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "title",
+                    "url",
+                    "source_name",
+                    "published_at",
+                    "scraped_at"
+                ],
+                "title": "NewsArticleResponse",
+                "description": "Response schema for a news article."
+            },
+            "NewsSourceResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "Url"
+                    },
+                    "source_type": {
+                        "type": "string",
+                        "title": "Source Type"
+                    },
+                    "category_focus": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category Focus"
+                    },
+                    "typical_access_type": {
+                        "type": "string",
+                        "title": "Typical Access Type",
+                        "default": "free"
+                    },
+                    "language": {
+                        "type": "string",
+                        "title": "Language",
+                        "default": "en"
+                    },
+                    "country": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Country"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "title": "Is Active",
+                        "default": true
+                    },
+                    "last_fetch_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Fetch At"
+                    },
+                    "last_fetch_success": {
+                        "type": "boolean",
+                        "title": "Last Fetch Success",
+                        "default": true
+                    },
+                    "total_articles_fetched": {
+                        "type": "integer",
+                        "title": "Total Articles Fetched",
+                        "default": 0
+                    },
+                    "average_relevance_score": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Average Relevance Score"
+                    },
+                    "free_content_percentage": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Free Content Percentage"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "url",
+                    "source_type"
+                ],
+                "title": "NewsSourceResponse",
+                "description": "Response schema for a news source."
+            },
+            "PostListItem": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "entity_type": {
+                        "$ref": "#/components/schemas/EntityTypeEnum"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "title": "Score"
+                    },
+                    "upvotes": {
+                        "type": "integer",
+                        "title": "Upvotes"
+                    },
+                    "downvotes": {
+                        "type": "integer",
+                        "title": "Downvotes"
+                    },
+                    "comment_count": {
+                        "type": "integer",
+                        "title": "Comment Count"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "preview_text": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Preview Text"
+                    },
+                    "preview_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Preview Url"
+                    },
+                    "source_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Name"
+                    },
+                    "user_nickname": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Nickname"
+                    },
+                    "user_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "title",
+                    "entity_type",
+                    "user_id",
+                    "score",
+                    "upvotes",
+                    "downvotes",
+                    "comment_count",
+                    "created_at"
+                ],
+                "title": "PostListItem",
+                "description": "Simplified post schema for list views (feed)."
+            },
+            "PostListResponse": {
+                "properties": {
+                    "posts": {
+                        "items": {
+                            "$ref": "#/components/schemas/PostListItem"
+                        },
+                        "type": "array",
+                        "title": "Posts"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "page": {
+                        "type": "integer",
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "title": "Page Size"
+                    },
+                    "has_more": {
+                        "type": "boolean",
+                        "title": "Has More"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "posts",
+                    "total",
+                    "page",
+                    "page_size",
+                    "has_more"
+                ],
+                "title": "PostListResponse",
+                "description": "Paginated list of posts."
+            },
+            "PostResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "entity_type": {
+                        "$ref": "#/components/schemas/EntityTypeEnum"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "community_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Community Id"
+                    },
+                    "upvotes": {
+                        "type": "integer",
+                        "title": "Upvotes"
+                    },
+                    "downvotes": {
+                        "type": "integer",
+                        "title": "Downvotes"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "title": "Score"
+                    },
+                    "hot_score": {
+                        "type": "number",
+                        "title": "Hot Score"
+                    },
+                    "view_count": {
+                        "type": "integer",
+                        "title": "View Count"
+                    },
+                    "comment_count": {
+                        "type": "integer",
+                        "title": "Comment Count"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "title": "Is Active"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "automated_article": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AutomatedArticleResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_submission": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserSubmissionResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_nickname": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Nickname"
+                    },
+                    "user_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "title",
+                    "entity_type",
+                    "user_id",
+                    "community_id",
+                    "upvotes",
+                    "downvotes",
+                    "score",
+                    "hot_score",
+                    "view_count",
+                    "comment_count",
+                    "is_active",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PostResponse",
+                "description": "Schema for post in API responses."
+            },
+            "SortOption": {
+                "type": "string",
+                "enum": [
+                    "hot",
+                    "top",
+                    "new",
+                    "controversial",
+                    "rising"
+                ],
+                "title": "SortOption",
+                "description": "Post sorting options."
+            },
+            "SubmissionTypeEnum": {
+                "type": "string",
+                "enum": [
+                    "text",
+                    "link"
+                ],
+                "title": "SubmissionTypeEnum",
+                "description": "User submission type for API requests/responses."
+            },
+            "TimePeriod": {
+                "type": "string",
+                "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "year",
+                    "all"
+                ],
+                "title": "TimePeriod",
+                "description": "Time period for 'top' sorting."
+            },
+            "TokenExchangeRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code"
+                    },
+                    "redirect_uri": {
+                        "type": "string",
+                        "title": "Redirect Uri",
+                        "default": "http://localhost:3000/auth/callback"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "code"
+                ],
+                "title": "TokenExchangeRequest"
+            },
+            "TokenResponse": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "id_token": {
+                        "type": "string",
+                        "title": "Id Token"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "title": "Token Type"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "title": "Expires In"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserResponse"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "id_token",
+                    "token_type",
+                    "expires_in",
+                    "user"
+                ],
+                "title": "TokenResponse"
+            },
+            "UserCreate": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Display Name"
+                    },
+                    "bio": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 1000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bio"
+                    },
+                    "role": {
+                        "type": "string",
+                        "pattern": "^(member|expert|moderator|admin)$",
+                        "title": "Role",
+                        "default": "member"
+                    },
+                    "is_expert": {
+                        "type": "boolean",
+                        "title": "Is Expert",
+                        "default": false
+                    },
+                    "expertise_areas": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expertise Areas"
+                    },
+                    "institution": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Institution"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    },
+                    "cognito_id": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "title": "Cognito Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "display_name",
+                    "cognito_id"
+                ],
+                "title": "UserCreate",
+                "description": "Schema for creating a new user.",
+                "example": {
+                    "bio": "Environmental scientist passionate about sustainability",
+                    "cognito_id": "cognito-user-12345",
+                    "display_name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "expertise_areas": "renewable energy, carbon sequestration",
+                    "institution": "University of California",
+                    "is_expert": false,
+                    "role": "member",
+                    "website_url": "https://johndoe.example.com"
+                }
+            },
+            "UserPublic": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "title": "Display Name"
+                    },
+                    "bio": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bio"
+                    },
+                    "is_expert": {
+                        "type": "boolean",
+                        "title": "Is Expert"
+                    },
+                    "expertise_areas": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expertise Areas"
+                    },
+                    "institution": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Institution"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    },
+                    "post_count": {
+                        "type": "integer",
+                        "title": "Post Count"
+                    },
+                    "comment_count": {
+                        "type": "integer",
+                        "title": "Comment Count"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "display_name",
+                    "bio",
+                    "is_expert",
+                    "expertise_areas",
+                    "institution",
+                    "website_url",
+                    "post_count",
+                    "comment_count",
+                    "created_at"
+                ],
+                "title": "UserPublic",
+                "description": "Public user schema (limited information for general display)."
+            },
+            "UserResponse": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Display Name"
+                    },
+                    "bio": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 1000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bio"
+                    },
+                    "role": {
+                        "type": "string",
+                        "pattern": "^(member|expert|moderator|admin)$",
+                        "title": "Role",
+                        "default": "member"
+                    },
+                    "is_expert": {
+                        "type": "boolean",
+                        "title": "Is Expert",
+                        "default": false
+                    },
+                    "expertise_areas": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expertise Areas"
+                    },
+                    "institution": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Institution"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "cognito_id": {
+                        "type": "string",
+                        "title": "Cognito Id"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "title": "Is Active"
+                    },
+                    "is_verified": {
+                        "type": "boolean",
+                        "title": "Is Verified"
+                    },
+                    "post_count": {
+                        "type": "integer",
+                        "title": "Post Count"
+                    },
+                    "comment_count": {
+                        "type": "integer",
+                        "title": "Comment Count"
+                    },
+                    "vote_count": {
+                        "type": "integer",
+                        "title": "Vote Count"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "last_active_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Active At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "display_name",
+                    "id",
+                    "cognito_id",
+                    "is_active",
+                    "is_verified",
+                    "post_count",
+                    "comment_count",
+                    "vote_count",
+                    "created_at",
+                    "updated_at",
+                    "last_active_at"
+                ],
+                "title": "UserResponse",
+                "description": "Schema for user response data."
+            },
+            "UserSubmissionCreate": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "title": "Title"
+                    },
+                    "submission_type": {
+                        "$ref": "#/components/schemas/SubmissionTypeEnum"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 1000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "submission_type"
+                ],
+                "title": "UserSubmissionCreate",
+                "description": "Schema for creating a user submission.",
+                "examples": [
+                    {
+                        "content": "Ocean ecosystems are facing unprecedented threats...",
+                        "submission_type": "text",
+                        "title": "Why we need to protect ocean ecosystems"
+                    },
+                    {
+                        "submission_type": "link",
+                        "title": "New study on coral reef restoration",
+                        "url": "https://example.com/coral-study"
+                    }
+                ]
+            },
+            "UserSubmissionResponse": {
+                "properties": {
+                    "post_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Post Id"
+                    },
+                    "submission_type": {
+                        "$ref": "#/components/schemas/SubmissionTypeEnum"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Url"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "post_id",
+                    "submission_type",
+                    "content",
+                    "url",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "UserSubmissionResponse",
+                "description": "Schema for user submission in responses."
+            },
+            "UserUpdate": {
+                "properties": {
+                    "display_name": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "minLength": 1
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Display Name"
+                    },
+                    "bio": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 1000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bio"
+                    },
+                    "expertise_areas": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expertise Areas"
+                    },
+                    "institution": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Institution"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 500
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    }
+                },
+                "type": "object",
+                "title": "UserUpdate",
+                "description": "Schema for updating user information.",
+                "example": {
+                    "bio": "Senior Environmental Scientist with 15 years of experience",
+                    "display_name": "Dr. John Doe",
+                    "expertise_areas": "renewable energy, carbon capture, sustainable agriculture",
+                    "institution": "Stanford Environmental Institute"
+                }
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "VoteCreate": {
+                "properties": {
+                    "vote_value": {
+                        "type": "integer",
+                        "enum": [
+                            1,
+                            -1
+                        ],
+                        "title": "Vote Value",
+                        "description": "1 for upvote, -1 for downvote"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "vote_value"
+                ],
+                "title": "VoteCreate",
+                "description": "Schema for creating or updating a vote.",
+                "examples": [
+                    {
+                        "vote_value": 1
+                    },
+                    {
+                        "vote_value": -1
+                    }
+                ]
+            },
+            "VoteResponse": {
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "post_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Post Id"
+                    },
+                    "comment_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Comment Id"
+                    },
+                    "vote_value": {
+                        "type": "integer",
+                        "title": "Vote Value"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "user_id",
+                    "vote_value",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "VoteResponse",
+                "description": "Schema for vote in responses."
+            },
+            "VoteStatusResponse": {
+                "properties": {
+                    "has_voted": {
+                        "type": "boolean",
+                        "title": "Has Voted"
+                    },
+                    "vote_value": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Vote Value"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "has_voted"
+                ],
+                "title": "VoteStatusResponse",
+                "description": "Schema for checking user's vote status on an item.",
+                "examples": [
+                    {
+                        "has_voted": true,
+                        "vote_value": 1
+                    },
+                    {
+                        "has_voted": false
+                    }
+                ]
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
