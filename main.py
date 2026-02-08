@@ -11,7 +11,7 @@ import uvicorn
 
 from app.core.config import settings
 from app.core.database import create_async_database_engine
-from app.api.endpoints import users, news, auth
+from app.api.endpoints import users, news, auth, posts, comments, votes
 
 # Initialize FastAPI app with settings
 app = FastAPI(
@@ -35,6 +35,9 @@ app.add_middleware(
 # Include API routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
+app.include_router(posts.router, prefix="/api/v1")
+app.include_router(comments.router, prefix="/api/v1")
+app.include_router(votes.router, prefix="/api/v1")
 
 # Simple test endpoint for database connection
 @app.get("/test-db")
@@ -90,10 +93,12 @@ async def api_info():
         "api_version": "v1",
         "features": [
             "User Authentication (AWS Cognito)",
-            "Content Management (Posts, Articles, Comments)",
-            "AI-Powered Content Curation (Claude API)",
-            "Real-time Updates",
-            "Background Processing"
+            "Reddit-style Posts with Voting & Karma",
+            "Threaded Comments",
+            "Automated News Curation (RSS/API)",
+            "AI-Powered Content Analysis (Claude API)",
+            "Hot/Top/New/Controversial/Rising Feeds",
+            "Weighted Voting Based on Karma"
         ],
         "status": "development"
     }

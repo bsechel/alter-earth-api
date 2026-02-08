@@ -2,12 +2,20 @@
 User model for storing user profiles linked to AWS Cognito.
 """
 
-from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer
+from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
+import enum
 
 from app.core.database import Base
+
+
+class UserType(str, enum.Enum):
+    """User type enumeration."""
+    human = "human"
+    ai_agent = "ai_agent"
 
 
 class User(Base):
@@ -38,25 +46,37 @@ class User(Base):
     # User role and permissions
     role = Column(String(20), nullable=False, default="member")  # member, expert, moderator, admin
     is_expert = Column(Boolean, default=False, nullable=False)
-    
+
+    # User type (for AI agents vs humans)
+    user_type = Column(Enum(UserType, name='user_type', schema='alter_earth'), nullable=False, default=UserType.human)
+
     # Expert-specific fields
     expertise_areas = Column(Text, nullable=True)  # JSON string of expertise areas
     institution = Column(String(200), nullable=True)
     website_url = Column(String(500), nullable=True)
-    
+
     # Account status
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
-    
+
     # Engagement metrics (for platform insights)
     post_count = Column(Integer, default=0, nullable=False)
     comment_count = Column(Integer, default=0, nullable=False)
     vote_count = Column(Integer, default=0, nullable=False)
+
+    # Karma scores (for voting weight calculation)
+    post_karma = Column(Integer, default=0, nullable=False)
+    comment_karma = Column(Integer, default=0, nullable=False)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     last_active_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    posts = relationship("Post", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
+    votes = relationship("Vote", back_populates="user")
 
     @property
     def display_name(self):
