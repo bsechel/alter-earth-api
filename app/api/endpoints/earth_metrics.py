@@ -43,19 +43,26 @@ def _derive_trend_and_status(metric: EarthMetric, readings: list[EarthMetricRead
         # has been declining since. For sparse series, "did it get better or
         # worse since it was last measured" (the previous reading) is what a
         # reader actually means by trend.
-        baseline = ordered[-2] if len(ordered) >= 2 else ordered[0]
+        baseline_value = ordered[-2].value if len(ordered) >= 2 else ordered[0].value
+        recent_value = current_value
     else:
-        # Dense annual data: compare against the reading from ~10 years before
-        # the latest one (or the earliest available if shorter than that).
-        baseline = ordered[0]
+        # Dense annual data: average a small trailing window instead of
+        # comparing two single years 10 years apart. Single-point comparisons
+        # are fragile for noisy series - Arctic sea ice extent swings by ~2
+        # million km^2 year to year from weather alone, so 2015 vs. 2025 alone
+        # can flip "improving"/"worsening" depending on which two specific
+        # years get picked, even though neither reflects the steadier signal.
+        # Averaging the last 5 years against the 5 years ending ~10 years back
+        # smooths that noise out while still reflecting the real recent trend.
+        window = 5
+        recent_window = ordered[-window:]
         target_year = latest.reading_date.year - 10
-        for r in ordered:
-            if r.reading_date.year <= target_year:
-                baseline = r
-            else:
-                break
+        past_candidates = [r for r in ordered if r.reading_date.year <= target_year]
+        past_window = past_candidates[-window:] if past_candidates else ordered[:window]
+        recent_value = sum(r.value for r in recent_window) / len(recent_window)
+        baseline_value = sum(r.value for r in past_window) / len(past_window)
 
-    delta = current_value - baseline.value
+    delta = recent_value - baseline_value
 
     # Measure how significant the change is against the metric's own scale of
     # concern (the gap between its warning and critical thresholds), not as a
@@ -66,9 +73,9 @@ def _derive_trend_and_status(metric: EarthMetric, readings: list[EarthMetricRead
     # a 0.2% change in the raw value, so it used to get misclassified as
     # "stable". Falls back to percent-of-value when thresholds aren't set.
     if metric.critical_threshold is not None and metric.warning_threshold is not None:
-        scale = abs(metric.critical_threshold - metric.warning_threshold) or abs(baseline.value) or 1
+        scale = abs(metric.critical_threshold - metric.warning_threshold) or abs(baseline_value) or 1
     else:
-        scale = abs(baseline.value) or 1
+        scale = abs(baseline_value) or 1
     significance = abs(delta) / scale
 
     if significance < 0.05:
