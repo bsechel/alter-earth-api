@@ -597,12 +597,16 @@ async def seed():
             id="extinction-risk",
             category="Biodiversity",
             name="IUCN Red List Index",
-            simplified_name="Extinction Risk",
+            # "Extinction Risk" as a headline paired with a number like 0.75
+            # reads as "75% risk, bad" - but higher is actually safer here
+            # (1.0 = no species expected to go extinct). Renamed so the
+            # headline's direction matches the number's direction.
+            simplified_name="Species Safety",
             icon="\U0001F98F",
             unit="index (0-1)",
             target_value=1.0,
             target_description="1 = no species threatened",
-            description="Tracks extinction risk for assessed species groups. A value of 1 means no species are expected to go extinct in the near future.",
+            description="Tracks how safe assessed species groups are from extinction (IUCN Red List Index). A value of 1 means no species are expected to go extinct in the near future.",
             action_info="Support biodiversity conservation, protect endangered species, and advocate for habitat preservation.",
             higher_is_worse=False,
             warning_threshold=0.8,
