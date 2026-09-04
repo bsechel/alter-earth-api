@@ -277,14 +277,22 @@ async def _upsert_metric(session, **fields):
 
 async def _upsert_readings(session, metric_id, source_id, annual_values, month=7, day=1):
     result = await session.execute(
-        select(EarthMetricReading.reading_date).where(EarthMetricReading.metric_id == metric_id)
+        select(EarthMetricReading).where(EarthMetricReading.metric_id == metric_id)
     )
-    existing_dates = {row[0] for row in result.all()}
+    existing_by_date = {r.reading_date: r for r in result.scalars().all()}
 
     added = 0
+    updated = 0
     for year, value in annual_values.items():
         reading_date = date(year, month, day)
-        if reading_date in existing_dates:
+        existing = existing_by_date.get(reading_date)
+        if existing:
+            # Keep existing rows in sync if the value or cited source changes
+            # upstream (e.g. a citation fix) - not just insert-if-missing.
+            if existing.value != value or existing.source_id != source_id:
+                existing.value = value
+                existing.source_id = source_id
+                updated += 1
             continue
         session.add(EarthMetricReading(
             metric_id=metric_id,
@@ -293,6 +301,8 @@ async def _upsert_readings(session, metric_id, source_id, annual_values, month=7
             source_id=source_id,
         ))
         added += 1
+    if updated:
+        print(f"  ({metric_id}: {updated} existing readings updated - value/source changed)")
     return added
 
 
@@ -365,10 +375,16 @@ async def seed():
         )
         owid_lpi = await _get_or_create_source(
             session,
-            name="Living Planet Index",
-            organization="Our World in Data (WWF / Zoological Society of London)",
-            url="https://ourworldindata.org/grapher/global-living-planet-index",
-            description="Global index tracking the abundance of thousands of monitored vertebrate populations, indexed to 100 in 1970.",
+            name="LPI 2026. Living Planet Index database. <www.livingplanetindex.org/>",
+            organization="Zoological Society of London (ZSL) & WWF International",
+            url="https://www.livingplanetindex.org/",
+            description=(
+                "Global index tracking the abundance of thousands of monitored vertebrate populations, indexed to 100 in 1970. "
+                "Values sourced via Our World in Data (https://ourworldindata.org/grapher/global-living-planet-index). "
+                "The published global/regional/system LPI trends are licensed CC BY-SA 4.0 by ZSL/WWF (the underlying "
+                "species-level dataset is not reproduced here) - see https://livingplanetindex.org/documents/data_agreement.pdf. "
+                "Any further redistribution of this data should carry the same CC BY-SA 4.0 terms."
+            ),
         )
         owid_water_stress = await _get_or_create_source(
             session,
