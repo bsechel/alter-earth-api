@@ -33,15 +33,27 @@ def _derive_trend_and_status(metric: EarthMetric, readings: list[EarthMetricRead
     latest = ordered[-1]
     current_value = latest.value
 
-    # Compare against the reading from ~10 years before the latest one (or the
-    # earliest available if the series is shorter than that).
-    baseline = ordered[0]
-    target_year = latest.reading_date.year - 10
-    for r in ordered:
-        if r.reading_date.year <= target_year:
-            baseline = r
-        else:
-            break
+    if len(ordered) <= 6:
+        # Sparse/epoch data (e.g. GCRMN's coral reef assessments): the ~10-year
+        # lookback below can land on an arbitrary, unrepresentative point given
+        # how irregularly these are spaced - e.g. coral reef cover's readings
+        # are 1990/1998/2009/2018, and "closest to 10 years before 2018" picks
+        # 1998, the mass-bleaching crash year, making a partial recovery from
+        # that crash read as "improving" even though cover peaked in 2009 and
+        # has been declining since. For sparse series, "did it get better or
+        # worse since it was last measured" (the previous reading) is what a
+        # reader actually means by trend.
+        baseline = ordered[-2] if len(ordered) >= 2 else ordered[0]
+    else:
+        # Dense annual data: compare against the reading from ~10 years before
+        # the latest one (or the earliest available if shorter than that).
+        baseline = ordered[0]
+        target_year = latest.reading_date.year - 10
+        for r in ordered:
+            if r.reading_date.year <= target_year:
+                baseline = r
+            else:
+                break
 
     delta = current_value - baseline.value
 
