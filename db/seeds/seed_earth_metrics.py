@@ -497,8 +497,14 @@ async def seed():
             description="Surface ocean pH from the Hawaii Ocean Time-series at Station ALOHA. Falling pH means more acidic oceans, harming marine life and coral reefs.",
             action_info="Reduce CO₂ emissions, protect marine ecosystems, and support ocean conservation efforts.",
             higher_is_worse=False,
-            warning_threshold=8.0,
-            critical_threshold=7.9,
+            # Pre-industrial was ~8.2. Today's ~8.05 already represents a real,
+            # documented ~30% rise in ocean acidity (NOAA/IPCC), harming
+            # calcifying marine life - so it's treated as already in warning
+            # territory rather than "good", with critical reserved for the
+            # 7.8-7.9 range where severe/widespread ecosystem effects are
+            # discussed in the literature.
+            warning_threshold=8.15,
+            critical_threshold=8.0,
             display_order=5,
         )
         coral_metric = await _upsert_metric(
