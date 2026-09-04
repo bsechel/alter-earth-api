@@ -44,9 +44,22 @@ def _derive_trend_and_status(metric: EarthMetric, readings: list[EarthMetricRead
             break
 
     delta = current_value - baseline.value
-    relative = abs(delta) / abs(baseline.value) if baseline.value else 0
 
-    if relative < 0.005:
+    # Measure how significant the change is against the metric's own scale of
+    # concern (the gap between its warning and critical thresholds), not as a
+    # raw percentage of the value. A percentage-of-value threshold works for
+    # something like CO2 (hundreds of ppm) but badly understates metrics that
+    # live on a narrow scale far from zero - e.g. ocean pH moving from 8.065
+    # to 8.048 is a real, well-documented acidification trend, but it's only
+    # a 0.2% change in the raw value, so it used to get misclassified as
+    # "stable". Falls back to percent-of-value when thresholds aren't set.
+    if metric.critical_threshold is not None and metric.warning_threshold is not None:
+        scale = abs(metric.critical_threshold - metric.warning_threshold) or abs(baseline.value) or 1
+    else:
+        scale = abs(baseline.value) or 1
+    significance = abs(delta) / scale
+
+    if significance < 0.05:
         trend_direction = 'stable'
     else:
         trend_direction = 'up' if delta > 0 else 'down'
