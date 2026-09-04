@@ -8,6 +8,7 @@ from app.models.news import NewsArticle, NewsSource
 from app.models.post import Post, AutomatedArticle, UserSubmission, EntityType, SubmissionType
 from app.models.comment import Comment
 from app.models.vote import Vote
+from app.models.earth_metric import DataSource, EarthMetric, EarthMetricReading
 
 __all__ = [
     # User models
@@ -30,4 +31,9 @@ __all__ = [
 
     # Vote model
     "Vote",
+
+    # Earth Health Dashboard models
+    "DataSource",
+    "EarthMetric",
+    "EarthMetricReading",
 ]
