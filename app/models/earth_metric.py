@@ -52,6 +52,18 @@ class EarthMetric(Base):
     warning_threshold = Column(Float, nullable=True)
     critical_threshold = Column(Float, nullable=True)
 
+    # Overrides the threshold-computed status when the underlying indicator
+    # is known to miss a real-world problem measured a different way (e.g.
+    # SDG 6.4.2's withdrawal-vs-renewable-flow ratio can't see groundwater
+    # depletion the way satellite gravimetry can). NULL = normal computation.
+    # The citation is plain text/URL rather than a data_sources foreign key:
+    # unlike reading sources (genuinely shared across many rows), a status
+    # caveat is a one-off annotation on a single metric.
+    status_override = Column(String(20), nullable=True)
+    status_caveat = Column(Text, nullable=True)
+    status_caveat_source_name = Column(String(200), nullable=True)
+    status_caveat_source_url = Column(String(1000), nullable=True)
+
     display_order = Column(Integer, nullable=False, default=0)
     is_active = Column(Boolean, nullable=False, default=True)
 

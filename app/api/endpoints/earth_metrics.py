@@ -116,6 +116,15 @@ def _derive_trend_and_status(metric: EarthMetric, readings: list[EarthMetricRead
         else:
             status = 'critical'
 
+    # status_override acts as a floor, not a blind replacement: it bumps the
+    # badge up to at least that severity when the raw computation understates
+    # a real-world problem, but never downgrades a status that's already more
+    # severe than the override on its own.
+    if metric.status_override:
+        severity = {'good': 0, 'warning': 1, 'critical': 2}
+        if severity.get(metric.status_override, 0) > severity.get(status, 0):
+            status = metric.status_override
+
     return current_value, latest.reading_date, trend, trend_direction, status
 
 
@@ -163,6 +172,9 @@ async def list_earth_metrics(session: AsyncSession = Depends(get_async_session))
                 url=latest_source.url,
                 retrieved_at=latest_source.retrieved_at.isoformat(),
             ) if latest_source else None,
+            status_caveat=metric.status_caveat,
+            status_caveat_source_name=metric.status_caveat_source_name,
+            status_caveat_source_url=metric.status_caveat_source_url,
         ))
 
     return EarthHealthResponse(

@@ -393,6 +393,11 @@ async def seed():
             url="https://ourworldindata.org/grapher/freshwater-withdrawals-as-a-share-of-internal-resources",
             description="Global freshwater withdrawn as a percentage of total available internal renewable freshwater resources. The global aggregate masks much more severe stress in specific regions and countries.",
         )
+        # Not a data_sources row: this is a one-off status-caveat citation on
+        # a single metric, not a reading source shared across many rows (see
+        # migration 009's comment for why that's a plain URL, not a FK).
+        GRACE_FRESHWATER_DECLINE_NAME = "Rodell et al. 2025, Science Advances (NASA GRACE)"
+        GRACE_FRESHWATER_DECLINE_URL = "https://www.science.org/doi/10.1126/sciadv.adx0298"
         hot_ocean_ph = await _get_or_create_source(
             session,
             name="Hawaii Ocean Time-series (HOT), Station ALOHA",
@@ -664,6 +669,22 @@ async def seed():
             warning_threshold=25,
             critical_threshold=50,
             display_order=10,
+            # SDG 6.4.2 compares withdrawal against a fixed historical-average
+            # renewable-flow baseline, so it can't see stock depletion
+            # (groundwater mined faster than it recharges). NASA GRACE
+            # satellite data shows real freshwater storage is declining
+            # rapidly worldwide even though this ratio reads as moderate -
+            # floor the badge at "warning" and cite why.
+            status_override='warning',
+            status_caveat=(
+                "This ratio can look moderate even as real freshwater is disappearing: it compares withdrawal "
+                "against a fixed historical-average renewable-flow baseline, not actual current availability, so "
+                "it can't see groundwater being mined faster than it recharges. NASA satellite data shows global "
+                "freshwater storage has been declining rapidly since 2002, with about 75% of the world's population "
+                "living in areas of continuous freshwater decline."
+            ),
+            status_caveat_source_name=GRACE_FRESHWATER_DECLINE_NAME,
+            status_caveat_source_url=GRACE_FRESHWATER_DECLINE_URL,
         )
 
         co2_added = await _upsert_readings(session, co2_metric.id, noaa_co2.id, CO2_ANNUAL_MEAN_PPM)

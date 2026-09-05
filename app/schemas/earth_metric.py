@@ -40,6 +40,13 @@ class EarthMetricOut(BaseModel):
     reading_count: int = 0
     source: Optional[DataSourceOut] = None
 
+    # Present only when this metric's raw status is known to understate a
+    # real-world problem measured a different way; see status_override on
+    # the EarthMetric model for why.
+    status_caveat: Optional[str] = None
+    status_caveat_source_name: Optional[str] = None
+    status_caveat_source_url: Optional[str] = None
+
 
 class EarthHealthResponse(BaseModel):
     """Response for GET /earth-metrics - mirrors the frontend's existing shape."""
